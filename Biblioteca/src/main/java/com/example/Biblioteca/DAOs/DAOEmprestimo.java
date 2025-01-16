@@ -13,7 +13,7 @@ import java.util.List;
 public class DAOEmprestimo {
     public DAOEmprestimo() {
     }
-
+// falta decrementar em livros apos emprestimo
     public void create(Emprestimo emprestimoDto, List<ItemEmprestimo> itens) throws SQLException, ClassNotFoundException {
         String sql = "INSERT INTO Emprestimo (usuario, dataEmprestimo) VALUES (?, ?)";
         try (Conexao conn = new Conexao();
@@ -23,7 +23,7 @@ public class DAOEmprestimo {
             ps.setString(2, emprestimoDto.getDataEmprestimo());
             ps.execute();
 
-            // Obtendo o ID do último emprestimo inserido
+            // Obtendo o ID do ultimo emprestimo inserido
             ResultSet generatedKeys = ps.getGeneratedKeys();
             if (generatedKeys.next()) {
                 int emprestimoId = generatedKeys.getInt(1);
@@ -61,7 +61,7 @@ public class DAOEmprestimo {
         }
     }
 
-    public List<Emprestimo> getAllLivros() throws SQLException, ClassNotFoundException {
+    public List<Emprestimo> getAllEmprestimos() throws SQLException, ClassNotFoundException {
         String sql = "SELECT * FROM Emprestimo";
         List<Emprestimo> lista = new ArrayList<>();
 

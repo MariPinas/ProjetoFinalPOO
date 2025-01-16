@@ -16,7 +16,7 @@ public class Conexao implements AutoCloseable{
             try {
                 Class.forName("com.mysql.cj.jdbc.Driver");
                 System.out.println("conn:" + String.valueOf(this.conn));
-                this.conn = DriverManager.getConnection("jdbc:mysql://localhost:3306/biblioteca", "root", "123");
+                this.conn = DriverManager.getConnection("jdbc:mysql://localhost:3306/biblioteca", "root", "1234");
                 if (this.conn != null) {
                     System.out.println("Conexão realizada!");
                     System.out.println("conn:" + String.valueOf(this.conn));

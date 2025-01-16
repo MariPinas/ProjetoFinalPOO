@@ -7,14 +7,17 @@ public class Emprestimo {
     private int id;
     private String usuario;
     private String dataEmprestimo;
+    private String dataDevolucao;
     private List<ItemEmprestimo> itens;
 
     public Emprestimo() {
     }
 
-    public Emprestimo(String usuario, String dataEmprestimo) {
+
+    public Emprestimo(String usuario, String dataEmprestimo, String dataDevolucao) {
         this.usuario = usuario;
         this.dataEmprestimo = dataEmprestimo;
+        this.dataDevolucao = dataDevolucao;
         this.itens = new ArrayList<>();
     }
 
@@ -26,6 +29,14 @@ public class Emprestimo {
         } else {
             System.out.println("Livro " + livro.getTitulo() + " nao esta disponivel");
         }
+    }
+
+    public String getDataDevolucao() {
+        return dataDevolucao;
+    }
+
+    public void setDataDevolucao(String dataDevolucao) {
+        this.dataDevolucao = dataDevolucao;
     }
 
     public void devolverLivro(Livro livro) {
