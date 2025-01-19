@@ -1,6 +1,6 @@
 package com.example.Biblioteca.DAOs;
 
-import com.example.Biblioteca.Conexao;
+import com.example.Biblioteca.Banco.Conexao;
 import com.example.Biblioteca.Model.ItemEmprestimo;
 
 import java.sql.PreparedStatement;
@@ -11,6 +11,21 @@ import java.util.List;
 
 public class DAOItemEmprestimo {
     public DAOItemEmprestimo() {
+    }
+
+    public void criarTabelaItemEmprestimo() throws SQLException, ClassNotFoundException {
+        String sql = "CREATE TABLE IF NOT EXISTS ItemEmprestimo ("
+                + "id INT AUTO_INCREMENT PRIMARY KEY, "
+                + "emprestimoId INT NOT NULL, "
+                + "livroId INT NOT NULL, "
+                + "quantidade INT NOT NULL, "
+                + "FOREIGN KEY (emprestimoId) REFERENCES Emprestimo(id) ON DELETE CASCADE, "
+                + "FOREIGN KEY (livroId) REFERENCES Livro(id) ON DELETE CASCADE)";
+
+        try (Conexao conn = new Conexao(); PreparedStatement ps = conn.getConexao().prepareStatement(sql)) {
+            ps.executeUpdate();
+            System.out.println("Tabela ItemEmprestimo criada com sucesso ou já existente.");
+        }
     }
 
     public void create(ItemEmprestimo itemEmprestimo) throws SQLException, ClassNotFoundException {

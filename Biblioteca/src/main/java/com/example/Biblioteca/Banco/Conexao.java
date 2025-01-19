@@ -1,4 +1,4 @@
-package com.example.Biblioteca;
+package com.example.Biblioteca.Banco;
 
 import java.sql.Connection;
 import java.sql.DriverManager;

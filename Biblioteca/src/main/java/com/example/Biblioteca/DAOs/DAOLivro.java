@@ -1,6 +1,6 @@
 package com.example.Biblioteca.DAOs;
 
-import com.example.Biblioteca.Conexao;
+import com.example.Biblioteca.Banco.Conexao;
 import com.example.Biblioteca.Model.Livro;
 
 import java.sql.PreparedStatement;
@@ -11,6 +11,19 @@ import java.util.List;
 
 public class DAOLivro {
     public DAOLivro() {
+    }
+
+    public void criarTabelaLivro() throws SQLException, ClassNotFoundException {
+        String sql = "CREATE TABLE IF NOT EXISTS Livro ("
+                + "id INT AUTO_INCREMENT PRIMARY KEY, "
+                + "titulo VARCHAR(255) NOT NULL, "
+                + "quantidade INT NOT NULL)";
+
+        try (Conexao conn = new Conexao();
+             PreparedStatement ps = conn.getConexao().prepareStatement(sql)) {
+            ps.executeUpdate();
+            System.out.println("Tabela Livro criada com sucesso ou ja existente.");
+        }
     }
 
     public void create(Livro livroDto) throws SQLException, ClassNotFoundException {
