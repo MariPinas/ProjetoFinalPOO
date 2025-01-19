@@ -3,6 +3,7 @@ package com.example.Biblioteca.Controller;
 import com.example.Biblioteca.DAOs.DAOEmprestimo;
 import com.example.Biblioteca.Model.Emprestimo;
 import com.example.Biblioteca.Model.ItemEmprestimo;
+import com.example.Biblioteca.Model.Livro;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -15,6 +16,7 @@ import java.util.List;
 public class ControllerEmprestimo {
 
     private DAOEmprestimo daoEmprestimo;
+    private Livro livro;
 
     public ControllerEmprestimo() {
         this.daoEmprestimo = new DAOEmprestimo();
@@ -29,6 +31,7 @@ public class ControllerEmprestimo {
 
         try {
             daoEmprestimo.create(emprestimo, emprestimo.getItens());
+            System.out.println("cointroller emprestimo da silve");
             return new ResponseEntity<>("Emprestimo criado com sucesso!", HttpStatus.CREATED);  // 201
         } catch (SQLException | ClassNotFoundException e) {
             return new ResponseEntity<>("Erro ao criar emprestimo: " + e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR); // 500
@@ -49,9 +52,7 @@ public class ControllerEmprestimo {
     @DeleteMapping("/{id}")
     public ResponseEntity<String> deletarEmprestimo(@PathVariable int id) {
         try {
-            Emprestimo emprestimo = new Emprestimo();
-            emprestimo.setId(id);
-            daoEmprestimo.delete(emprestimo);
+            daoEmprestimo.delete(id);
             return new ResponseEntity<>("Emprestimo deletado com sucesso!", HttpStatus.NO_CONTENT);  //204
         } catch (SQLException | ClassNotFoundException e) {
             return new ResponseEntity<>("Erro ao deletar emprestimo: " + e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);  //500

@@ -43,18 +43,6 @@ public class Livro {
         return quantidade > 0;
     }
 
-    public void emprestar() {
-        if (estaDisponivel()) {
-            quantidade--;
-        } else {
-            throw new IllegalStateException("Livro indisponível para empréstimo.");
-        }
-    }
-
-    public void devolver() {
-        quantidade++;
-    }
-
     @Override
     public String toString() {
         return "Livro{" +

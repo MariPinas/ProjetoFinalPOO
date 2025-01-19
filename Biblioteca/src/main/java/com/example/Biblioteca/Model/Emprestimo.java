@@ -7,46 +7,16 @@ public class Emprestimo {
     private int id;
     private String usuario;
     private String dataEmprestimo;
-    private String dataDevolucao;
     private List<ItemEmprestimo> itens;
 
     public Emprestimo() {
     }
 
 
-    public Emprestimo(String usuario, String dataEmprestimo, String dataDevolucao) {
+    public Emprestimo(String usuario, String dataEmprestimo) {
         this.usuario = usuario;
         this.dataEmprestimo = dataEmprestimo;
-        this.dataDevolucao = dataDevolucao;
         this.itens = new ArrayList<>();
-    }
-
-    public void adicionarItem(ItemEmprestimo item) {
-        Livro livro = item.getLivro();
-        if (livro.estaDisponivel()) {
-            itens.add(item);
-            livro.emprestar();
-        } else {
-            System.out.println("Livro " + livro.getTitulo() + " nao esta disponivel");
-        }
-    }
-
-    public String getDataDevolucao() {
-        return dataDevolucao;
-    }
-
-    public void setDataDevolucao(String dataDevolucao) {
-        this.dataDevolucao = dataDevolucao;
-    }
-
-    public void devolverLivro(Livro livro) {
-        for (ItemEmprestimo item : itens) {
-            if (item.getLivro().equals(livro)) {
-                livro.devolver();
-                itens.remove(item);
-                break;
-            }
-        }
     }
 
     public String getUsuario() {

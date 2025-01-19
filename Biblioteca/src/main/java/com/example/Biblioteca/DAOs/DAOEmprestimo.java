@@ -3,7 +3,9 @@ package com.example.Biblioteca.DAOs;
 import com.example.Biblioteca.Conexao;
 import com.example.Biblioteca.Model.Emprestimo;
 import com.example.Biblioteca.Model.ItemEmprestimo;
+import com.example.Biblioteca.Model.Livro;
 
+import java.sql.Date;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -13,75 +15,108 @@ import java.util.List;
 public class DAOEmprestimo {
     public DAOEmprestimo() {
     }
-// falta decrementar em livros apos emprestimo
-    public void create(Emprestimo emprestimoDto, List<ItemEmprestimo> itens) throws SQLException, ClassNotFoundException {
-        String sql = "INSERT INTO Emprestimo (usuario, dataEmprestimo) VALUES (?, ?)";
-        try (Conexao conn = new Conexao();
-             PreparedStatement ps = conn.getConexao().prepareStatement(sql, PreparedStatement.RETURN_GENERATED_KEYS)) {
+public void create(Emprestimo emprestimoDto, List<ItemEmprestimo> itens) throws SQLException, ClassNotFoundException {
+    System.out.println("create dao Emprestimo");
+    String sql = "INSERT INTO Emprestimo (usuario, dataEmprestimo) VALUES (?, ?)";
+    try (Conexao conn = new Conexao();
+         PreparedStatement ps = conn.getConexao().prepareStatement(sql, PreparedStatement.RETURN_GENERATED_KEYS)) {
 
-            ps.setString(1, emprestimoDto.getUsuario());
-            ps.setString(2, emprestimoDto.getDataEmprestimo());
-            ps.execute();
+        ps.setString(1, emprestimoDto.getUsuario());
+        ps.setString(2, emprestimoDto.getDataEmprestimo());
+        ps.execute();
 
-            // Obtendo o ID do ultimo emprestimo inserido
-            ResultSet generatedKeys = ps.getGeneratedKeys();
-            if (generatedKeys.next()) {
-                int emprestimoId = generatedKeys.getInt(1);
+        ResultSet generatedKeys = ps.getGeneratedKeys();
+        if (generatedKeys.next()) {
+            int emprestimoId = generatedKeys.getInt(1); // id gerado do empréstimo
 
-                //add item no emprestimo, ele vai ate a tabela itememprestimo e add nela
-                for (ItemEmprestimo item : itens) {
-                    String sqlItem = "INSERT INTO ItemEmprestimo (emprestimo_id, livro_id, quantidade) VALUES (?, ?, ?)";
-                    try (PreparedStatement psItem = conn.getConexao().prepareStatement(sqlItem)) {
-                        psItem.setInt(1, emprestimoId);
-                        psItem.setInt(2, item.getLivroId());
-                        psItem.setInt(3, item.getQuantidade());
-                        psItem.execute();
-                    }
+            System.out.println("Emprestimo ID gerado: " + emprestimoId);
+
+            for (ItemEmprestimo item : itens) {
+                Livro livro = new DAOLivro().getById(item.getLivroId());
+                System.out.println("Livros para adicionar: " + livro.getTitulo() + " com " + item.getQuantidade() + " unidades.");
+
+                if (livro.getQuantidade() >= item.getQuantidade()) {
+                    livro.setQuantidade(livro.getQuantidade() - item.getQuantidade());
+                    new DAOLivro().update(livro);  // Atualiza a quantidade no livro
+                    System.out.println("Livro atualizado: " + livro.getTitulo());
+
+                    //dar o create em item emprestimo
+                    DAOItemEmprestimo daoItemEmprestimo = new DAOItemEmprestimo();
+                    item.setEmprestimoId(emprestimoId);
+                    daoItemEmprestimo.create(item);
+                    System.out.println("Item inserido: Livro ID " + item.getLivroId() + ", Quantidade: " + item.getQuantidade());
+                } else {
+                    throw new IllegalStateException("Quantidade insuficiente para o livro: " + livro.getTitulo());
                 }
             }
-            System.out.println("Emprestimo com livros inserido com sucesso!");
+        }
+    } catch (SQLException | ClassNotFoundException e) {
+        System.err.println("Erro ao criar empréstimo: " + e.getMessage());
+        throw e;
+    }
+}
+
+
+    public void delete(int emprestimoId) throws SQLException, ClassNotFoundException {
+        String sqlDeleteItems = "DELETE FROM ItemEmprestimo WHERE emprestimoId = ?";
+        String sqlDeleteEmprestimo = "DELETE FROM Emprestimo WHERE id = ?";
+
+        try (Conexao conn = new Conexao()) {
+            DAOItemEmprestimo daoItemEmprestimo = new DAOItemEmprestimo();
+            List<ItemEmprestimo> itens = daoItemEmprestimo.getLivrosByEmprestimoId(emprestimoId);
+
+            //devolve livros
+            DAOLivro daoLivro = new DAOLivro();
+            for (ItemEmprestimo item : itens) {
+                Livro livro = daoLivro.getById(item.getLivroId());
+                livro.setQuantidade(livro.getQuantidade() + item.getQuantidade());
+                daoLivro.update(livro);
+            }
+            //deletar os itens
+            try (PreparedStatement psItems = conn.getConexao().prepareStatement(sqlDeleteItems)) {
+                psItems.setInt(1, emprestimoId);
+                psItems.executeUpdate();
+            }
+            //delete o emprestimo
+            try (PreparedStatement psEmprestimo = conn.getConexao().prepareStatement(sqlDeleteEmprestimo)) {
+                psEmprestimo.setInt(1, emprestimoId);
+                psEmprestimo.executeUpdate();
+            }
+
+            System.out.println("Emprestimo e itens removidos com sucesso!");
         } catch (SQLException | ClassNotFoundException e) {
-            System.err.println("Erro ao inserir emprestimo com livros: " + e.getMessage());
+            System.err.println("Erro ao deletar empréstimo: " + e.getMessage());
             throw e;
         }
     }
 
-
-    public void delete(Emprestimo emprestimoDto) throws SQLException, ClassNotFoundException {
-        String sql = "DELETE FROM Emprestimo WHERE id = ?";
-        try (Conexao conn = new Conexao();
-             PreparedStatement ps = conn.getConexao().prepareStatement(sql)) {
-
-            ps.setInt(1, emprestimoDto.getId());
-            ps.execute();
-            System.out.println("Emprestimo deletado com sucesso!");
-        } catch (ClassNotFoundException | SQLException e) {
-            System.err.println("Erro ao deletar emprestimo: " + e.getMessage());
-            throw e;
-        }
-    }
 
     public List<Emprestimo> getAllEmprestimos() throws SQLException, ClassNotFoundException {
         String sql = "SELECT * FROM Emprestimo";
-        List<Emprestimo> lista = new ArrayList<>();
+        List<Emprestimo> listaEmprestimos = new ArrayList<>();
 
         try (Conexao conn = new Conexao();
              PreparedStatement ps = conn.getConexao().prepareStatement(sql);
              ResultSet rs = ps.executeQuery()) {
 
             while (rs.next()) {
-                Emprestimo emprestimoDto = new Emprestimo();
-                emprestimoDto.setId(rs.getInt("id"));
-                emprestimoDto.setUsuario(rs.getString("usuario"));
-                emprestimoDto.setDataEmprestimo(rs.getString("dataEmprestimo"));
-                lista.add(emprestimoDto);
+                Emprestimo emprestimo = new Emprestimo();
+                emprestimo.setId(rs.getInt("id"));
+                emprestimo.setUsuario(rs.getString("usuario"));
+                emprestimo.setDataEmprestimo(rs.getString("dataEmprestimo"));
+
+                //pega o id do emprestimo para ver quais itens sao deste emprestimo
+                List<ItemEmprestimo> itens = new DAOItemEmprestimo().getLivrosByEmprestimoId(emprestimo.getId());
+                emprestimo.setItens(itens);  //dai seta os itens em emprestimo
+
+                listaEmprestimos.add(emprestimo);
             }
-        } catch (ClassNotFoundException | SQLException e) {
+        } catch (SQLException | ClassNotFoundException e) {
             System.err.println("Erro ao buscar emprestimos: " + e.getMessage());
             throw e;
         }
 
-        return lista;
+        return listaEmprestimos;
     }
 
     public Emprestimo getEmprestimoById(int id) throws SQLException, ClassNotFoundException {
@@ -117,7 +152,7 @@ public class DAOEmprestimo {
              PreparedStatement ps = conn.getConexao().prepareStatement(sql)) {
 
             ps.setString(1, emprestimoDto.getUsuario());
-            ps.setString(2, emprestimoDto.getDataEmprestimo());
+            ps.setDate(2, Date.valueOf(emprestimoDto.getDataEmprestimo()));
             ps.setInt(3, emprestimoDto.getId());
 
             int rowsAffected = ps.executeUpdate(); // quantas linhas foram afetadas com o update

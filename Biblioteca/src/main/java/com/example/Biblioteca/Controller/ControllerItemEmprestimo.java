@@ -27,15 +27,13 @@ public class ControllerItemEmprestimo {
             return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);  // 500
         }
     }
-
-    @PutMapping("/{id}")
-    public ResponseEntity<String> atualizarItemEmprestimo(@PathVariable int id, @RequestBody ItemEmprestimo itemEmprestimo) {
+    @GetMapping("/all")
+    public ResponseEntity<List<ItemEmprestimo>> getAllItens() {
         try {
-            itemEmprestimo.setId(id);
-            daoItemEmprestimo.updateItemEmprestimo(itemEmprestimo);
-            return new ResponseEntity<>("Item de emprestimo atualizado com sucesso!", HttpStatus.OK);  // 200
+            List<ItemEmprestimo> itens = daoItemEmprestimo.getAll();
+            return new ResponseEntity<>(itens, HttpStatus.OK);  // 200 OK
         } catch (SQLException | ClassNotFoundException e) {
-            return new ResponseEntity<>("Erro ao atualizar item de emprestimo: " + e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);  // 500
+            return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);  // 500 erro interno
         }
     }
 }
