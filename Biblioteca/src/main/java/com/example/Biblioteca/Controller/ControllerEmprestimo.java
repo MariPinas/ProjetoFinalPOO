@@ -31,7 +31,6 @@ public class ControllerEmprestimo {
 
         try {
             daoEmprestimo.create(emprestimo, emprestimo.getItens());
-            System.out.println("cointroller emprestimo da silve");
             return new ResponseEntity<>("Emprestimo criado com sucesso!", HttpStatus.CREATED);  // 201
         } catch (SQLException | ClassNotFoundException e) {
             return new ResponseEntity<>("Erro ao criar emprestimo: " + e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR); // 500

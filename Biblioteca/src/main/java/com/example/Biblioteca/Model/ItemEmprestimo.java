@@ -27,7 +27,7 @@ public class ItemEmprestimo {
     }
 
     public int getEmprestimoId() {
-        return emprestimoId;
+        return this.emprestimoId;
     }
 
     public void setEmprestimoId(int emprestimoId) {
@@ -35,7 +35,7 @@ public class ItemEmprestimo {
     }
 
     public int getLivroId() {
-        return livroId;
+        return this.livroId;
     }
 
     public void setLivroId(int livroId) {
@@ -43,7 +43,7 @@ public class ItemEmprestimo {
     }
 
     public String getNomeLivro() {
-        return nomeLivro;
+        return this.nomeLivro;
     }
 
     public void setNomeLivro(String nomeLivro) {
@@ -51,7 +51,7 @@ public class ItemEmprestimo {
     }
 
     public int getId() {
-        return id;
+        return this.id;
     }
 
     public void setId(int id) {

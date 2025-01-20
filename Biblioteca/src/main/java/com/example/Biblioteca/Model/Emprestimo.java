@@ -20,7 +20,7 @@ public class Emprestimo {
     }
 
     public String getUsuario() {
-        return usuario;
+        return this.usuario;
     }
 
     public void setUsuario(String usuario) {
@@ -28,7 +28,7 @@ public class Emprestimo {
     }
 
     public String getDataEmprestimo() {
-        return dataEmprestimo;
+        return this.dataEmprestimo;
     }
 
     public void setDataEmprestimo(String dataEmprestimo) {
@@ -40,11 +40,11 @@ public class Emprestimo {
     }
 
     public List<ItemEmprestimo> getItens() {
-        return itens;
+        return this.itens;
     }
 
     public int getId() {
-        return id;
+        return this.id;
     }
 
     public void setId(int id) {

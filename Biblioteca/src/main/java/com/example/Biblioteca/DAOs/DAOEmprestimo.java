@@ -142,11 +142,14 @@ public void create(Emprestimo emprestimoDto, List<ItemEmprestimo> itens) throws 
             ps.setInt(1, id);
 
             try (ResultSet rs = ps.executeQuery()) {
-                if (rs.next()) {
+                while (rs.next()) {
                     emprestimoDto = new Emprestimo();
                     emprestimoDto.setId(rs.getInt("id"));
                     emprestimoDto.setUsuario(rs.getString("usuario"));
                     emprestimoDto.setDataEmprestimo(rs.getString("dataEmprestimo"));
+
+                    List<ItemEmprestimo> itens = new DAOItemEmprestimo().getLivrosByEmprestimoId(emprestimoDto.getId());
+                    emprestimoDto.setItens(itens);  //dai seta os itens em emprestimo
                 }
             }
         } catch (ClassNotFoundException | SQLException e) {
@@ -157,16 +160,16 @@ public void create(Emprestimo emprestimoDto, List<ItemEmprestimo> itens) throws 
         return emprestimoDto;
     }
 
-    public void update(Emprestimo livroDto) throws SQLException, ClassNotFoundException {
+    public void update(Emprestimo emprDto) throws SQLException, ClassNotFoundException {
         String sql = "UPDATE Emprestimo SET usuario = ?, dataEmprestimo = ? WHERE id = ?"; // onde tem ? entra os parametros na query
-        Emprestimo emprestimoDto = null;
 
         try (Conexao conn = new Conexao();
              PreparedStatement ps = conn.getConexao().prepareStatement(sql)) {
 
-            ps.setString(1, emprestimoDto.getUsuario());
-            ps.setDate(2, Date.valueOf(emprestimoDto.getDataEmprestimo()));
-            ps.setInt(3, emprestimoDto.getId());
+            //o emprDto eh o objeto que vai ser atualizado
+            ps.setString(1, emprDto.getUsuario());
+            ps.setDate(2, Date.valueOf(emprDto.getDataEmprestimo())); // converte a string para Date
+            ps.setInt(3, emprDto.getId());
 
             int rowsAffected = ps.executeUpdate(); // quantas linhas foram afetadas com o update
 
@@ -180,4 +183,5 @@ public void create(Emprestimo emprestimoDto, List<ItemEmprestimo> itens) throws 
             throw e;
         }
     }
+
 }
