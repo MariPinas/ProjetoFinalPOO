@@ -46,40 +46,39 @@ public class DAOItemEmprestimo {
     }
 
     public List<ItemEmprestimo> getLivrosByEmprestimoId(int emprestimoId) throws SQLException, ClassNotFoundException {
-        String sql = "SELECT * FROM ItemEmprestimo WHERE emprestimoId = ?";
-        List<ItemEmprestimo> lista = new ArrayList<>();
+        List<ItemEmprestimo> itens = new ArrayList<>();
+        String sql = "SELECT ie.id, ie.emprestimoId, ie.livroId, ie.quantidade, l.titulo " +
+                "FROM ItemEmprestimo ie " +
+                "JOIN Livro l ON ie.livroId = l.id " +
+                "WHERE ie.emprestimoId = ?"; //dando join de itememprestimo com livro no banco para pegar o nome do livro
 
         try (Conexao conn = new Conexao();
              PreparedStatement ps = conn.getConexao().prepareStatement(sql)) {
 
             ps.setInt(1, emprestimoId);
+            ResultSet rs = ps.executeQuery();
 
-            try (ResultSet rs = ps.executeQuery()) {
-                while (rs.next()) {
-                    ItemEmprestimo item = new ItemEmprestimo();
-                    item.setId(rs.getInt("id"));
-                    item.setEmprestimoId(rs.getInt("emprestimoId"));
-                    item.setLivroId(rs.getInt("livroId"));
-                    item.setQuantidade(rs.getInt("quantidade"));
+            while (rs.next()) {
+                ItemEmprestimo item = new ItemEmprestimo();
+                item.setId(rs.getInt("id"));
+                item.setEmprestimoId(rs.getInt("emprestimoId"));
+                item.setLivroId(rs.getInt("livroId"));
+                item.setQuantidade(rs.getInt("quantidade"));
 
-                    String sqlLivro = "SELECT titulo FROM Livro WHERE id = ?";
-                    try (PreparedStatement psLivro = conn.getConexao().prepareStatement(sqlLivro)) {
-                        psLivro.setInt(1, item.getLivroId());
-                        try (ResultSet rsLivro = psLivro.executeQuery()) {
-                            if (rsLivro.next()) {
-                                item.setNomeLivro(rsLivro.getString("titulo"));
-                            }
-                        }
-                    }
-                    lista.add(item);
-                }
+
+                String titulo = rs.getString("titulo");
+                item.setNomeLivro(titulo);  // Supondo que o ItemEmprestimo tenha um método setTitulo
+
+                itens.add(item);
             }
         } catch (SQLException | ClassNotFoundException e) {
-            System.err.println("Erro ao buscar livros de emprestimo: " + e.getMessage());
+            System.err.println("Erro ao buscar itens do empréstimo: " + e.getMessage());
             throw e;
         }
-        return lista;
+
+        return itens;
     }
+
 
     public ItemEmprestimo getById(int id) throws SQLException, ClassNotFoundException {
         String sql = "SELECT * FROM ItemEmprestimo WHERE id = ?";
@@ -109,16 +108,16 @@ public class DAOItemEmprestimo {
 
 
     public List<ItemEmprestimo> getItemByEmprestimoId(int emprestimoId) throws SQLException, ClassNotFoundException {
-        String sql = "SELECT * FROM ItemEmprestimo WHERE emprestimoId = ?";
+        String sql = "SELECT ie.id, ie.emprestimoId, ie.livroId, ie.quantidade, l.titulo " +
+                "FROM ItemEmprestimo ie " +
+                "JOIN Livro l ON ie.livroId = l.id " +
+                "WHERE ie.emprestimoId = ?";
         List<ItemEmprestimo> lista = new ArrayList<>();
 
         try (Conexao conn = new Conexao();
              PreparedStatement ps = conn.getConexao().prepareStatement(sql)) {
-
-            // Definindo o valor do emprestimoId
             ps.setInt(1, emprestimoId);
 
-            // Executando a consulta para obter os itens de um empréstimo
             try (ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) {
                     ItemEmprestimo item = new ItemEmprestimo();
@@ -126,27 +125,16 @@ public class DAOItemEmprestimo {
                     item.setEmprestimoId(rs.getInt("emprestimoId"));
                     item.setLivroId(rs.getInt("livroId"));
                     item.setQuantidade(rs.getInt("quantidade"));
-
-                    // Buscar o título do livro associado ao item
-                    String sqlLivro = "SELECT titulo FROM Livro WHERE id = ?";
-                    try (PreparedStatement psLivro = conn.getConexao().prepareStatement(sqlLivro)) {
-                        psLivro.setInt(1, item.getLivroId());
-                        try (ResultSet rsLivro = psLivro.executeQuery()) {
-                            if (rsLivro.next()) {
-                                item.setNomeLivro(rsLivro.getString("titulo"));
-                            }
-                        }
-                    }
-
-                    lista.add(item);  // Adiciona o item à lista
+                    item.setNomeLivro(rs.getString("titulo"));
+                    lista.add(item);
                 }
             }
         } catch (SQLException | ClassNotFoundException e) {
             System.err.println("Erro ao buscar itens de empréstimo: " + e.getMessage());
-            throw e; // Repassa a exceção para o chamador
+            throw e;
         }
 
-        return lista;  // Retorna a lista de itens do empréstimo
+        return lista;
     }
 
 
@@ -183,25 +171,29 @@ public class DAOItemEmprestimo {
         return lista;
     }
 
-    public List<ItemEmprestimo> updateItens(ItemEmprestimo itemEmprestimo) throws SQLException, ClassNotFoundException {
-        String sql = "UPDATE ItemEmprestimo SET livroId = ? , quantidade = ? WHERE id = ?";
-        List<ItemEmprestimo> lista = new ArrayList<>();
-        try(Conexao conn = new Conexao();
-            PreparedStatement ps = conn.getConexao().prepareStatement(sql);
-            ResultSet rs = ps.executeQuery()){
-            while (rs.next()) {
-                ps.setInt(1, itemEmprestimo.getLivroId());
-                ps.setInt(2, itemEmprestimo.getQuantidade());
-                ps.setInt(3, itemEmprestimo.getId());
-                ps.execute();
+    public void updateItens(ItemEmprestimo itemEmprestimo) throws SQLException, ClassNotFoundException {
+        String sql = "UPDATE ItemEmprestimo SET livroId = ?, quantidade = ? WHERE id = ?";
+
+        try (Conexao conn = new Conexao();
+             PreparedStatement ps = conn.getConexao().prepareStatement(sql)) {
+
+            ps.setInt(1, itemEmprestimo.getLivroId());
+            ps.setInt(2, itemEmprestimo.getQuantidade());
+            ps.setInt(3, itemEmprestimo.getId());
+
+            int rowsAffected = ps.executeUpdate();
+
+            if (rowsAffected > 0) {
+                System.out.println("Item de empréstimo atualizado com sucesso!");
+            } else {
+                System.out.println("ID do item de empréstimo não encontrado.");
             }
-        }catch(SQLException | ClassNotFoundException e) {
-            System.err.println("Erro ao atualizar itens do emprestimo: " + e.getMessage());
+        } catch (SQLException | ClassNotFoundException e) {
+            System.err.println("Erro ao atualizar itens do empréstimo: " + e.getMessage());
             throw e;
         }
-
-        return lista;
     }
+
 }
 
 

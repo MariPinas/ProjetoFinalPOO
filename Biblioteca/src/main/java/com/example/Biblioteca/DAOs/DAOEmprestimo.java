@@ -29,7 +29,7 @@ public class DAOEmprestimo {
     }
 
     public void create(Emprestimo emprestimoDto, List<ItemEmprestimo> itens) throws SQLException, ClassNotFoundException {
-        System.out.println("Creating Emprestimo...");
+        System.out.println("Criando o Emprestimo...");
         String sql = "INSERT INTO Emprestimo (usuario, dataEmprestimo) VALUES (?, ?)";
 
         try (Conexao conn = new Conexao();
@@ -126,14 +126,22 @@ public class DAOEmprestimo {
                 emprestimo.setUsuario(rs.getString("usuario"));
                 emprestimo.setDataEmprestimo(rs.getString("dataEmprestimo"));
 
-                //pega o id do emprestimo para ver quais itens sao deste emprestimo
+                //busca os itens do emprestimo
                 List<ItemEmprestimo> itens = new DAOItemEmprestimo().getLivrosByEmprestimoId(emprestimo.getId());
-                emprestimo.setItens(itens);  //dai seta os itens em emprestimo
+
+                //dai para cada item adiciona o nome do livro
+                for (ItemEmprestimo item : itens) {
+                    Livro livro = new DAOLivro().getById(item.getLivroId());
+                    if (livro != null) {
+                        item.setNomeLivro(livro.getTitulo()); // adiciona o titulo do livro no item
+                    }
+                }
+                emprestimo.setItens(itens); //associa os itens ao emprestimo
 
                 listaEmprestimos.add(emprestimo);
             }
         } catch (SQLException | ClassNotFoundException e) {
-            System.err.println("Erro ao buscar emprestimos: " + e.getMessage());
+            System.err.println("Erro ao buscar empréstimos: " + e.getMessage());
             throw e;
         }
 
@@ -150,64 +158,82 @@ public class DAOEmprestimo {
             ps.setInt(1, id);
 
             try (ResultSet rs = ps.executeQuery()) {
-                while (rs.next()) {
+                if (rs.next()) {
                     emprestimoDto = new Emprestimo();
                     emprestimoDto.setId(rs.getInt("id"));
                     emprestimoDto.setUsuario(rs.getString("usuario"));
                     emprestimoDto.setDataEmprestimo(rs.getString("dataEmprestimo"));
 
                     List<ItemEmprestimo> itens = new DAOItemEmprestimo().getLivrosByEmprestimoId(emprestimoDto.getId());
-                    emprestimoDto.setItens(itens);  //dai seta os itens em emprestimo
+
+                    for (ItemEmprestimo item : itens) {
+                        Livro livro = new DAOLivro().getById(item.getLivroId());
+                        if (livro != null) {
+                            item.setNomeLivro(livro.getTitulo());
+                        }
+                    }
+                    emprestimoDto.setItens(itens);
                 }
             }
         } catch (ClassNotFoundException | SQLException e) {
-            System.err.println("Erro ao buscar emprestimo de ID: " + e.getMessage());
+            System.err.println("Erro ao buscar empréstimo de ID: " + e.getMessage());
             throw e;
         }
 
         return emprestimoDto;
     }
 
-    public void update(Emprestimo emprDto) throws SQLException, ClassNotFoundException {
+    public void update(Emprestimo emprestimo) throws SQLException, ClassNotFoundException {
         String sql = "UPDATE Emprestimo SET usuario = ?, dataEmprestimo = ? WHERE id = ?";
 
         try (Conexao conn = new Conexao();
              PreparedStatement ps = conn.getConexao().prepareStatement(sql)) {
-
-            ps.setString(1, emprDto.getUsuario());
-            ps.setDate(2, Date.valueOf(emprDto.getDataEmprestimo()));
-            ps.setInt(3, emprDto.getId());
-
-            DAOItemEmprestimo daoItemEmprestimo = new DAOItemEmprestimo();
-            List<ItemEmprestimo> itens = daoItemEmprestimo.getLivrosByEmprestimoId(emprDto.getId());
-
-            for (ItemEmprestimo item : emprDto.getItens()) {
-                ItemEmprestimo itemAntigo = daoItemEmprestimo.getById(item.getId());
-                Livro livro = new DAOLivro().getById(item.getLivroId());
-
-                if (itemAntigo.getQuantidade() > item.getQuantidade()) {
-                    int diff = itemAntigo.getQuantidade() - item.getQuantidade();
-                    if (livro.getQuantidade() >= diff) {
-                        livro.setQuantidade(livro.getQuantidade() + diff);
-                        new DAOLivro().update(livro);
-                    } else {
-                        throw new IllegalStateException("Quantidade insuficiente para o livro: " + livro.getTitulo());
-                    }
-                } else if (itemAntigo.getQuantidade() < item.getQuantidade()) {
-                    int diff = item.getQuantidade() - itemAntigo.getQuantidade();
-                    livro.setQuantidade(livro.getQuantidade() - diff);
-                    new DAOLivro().update(livro);
-                }
-                daoItemEmprestimo.updateItens(item);
-            }
+            //primeiro atualiza os campos do emprestimo
+            ps.setString(1, emprestimo.getUsuario());
+            ps.setDate(2, Date.valueOf(emprestimo.getDataEmprestimo()));
+            ps.setInt(3, emprestimo.getId());
 
             int rowsAffected = ps.executeUpdate();
-
             if (rowsAffected > 0) {
-                System.out.println("Empréstimo e itens atualizados com sucesso!");
+                System.out.println("Empréstimo atualizado com sucesso!");
             } else {
                 System.out.println("ID de empréstimo não encontrado.");
+                return;
             }
+
+            // verifica e atualiza os itens do emprestimo
+            if (emprestimo.getItens() != null) {
+                DAOItemEmprestimo daoItemEmprestimo = new DAOItemEmprestimo();
+                for (ItemEmprestimo item : emprestimo.getItens()) {
+                    ItemEmprestimo itemAntigo = daoItemEmprestimo.getById(item.getId());
+                    Livro livro = new DAOLivro().getById(item.getLivroId());
+
+                    //atualiza a quantidade de livros com base nos itens
+                    if (itemAntigo != null && livro != null) {
+                        if (itemAntigo.getQuantidade() > item.getQuantidade()) {
+                            int diff = itemAntigo.getQuantidade() - item.getQuantidade();
+                            livro.setQuantidade(livro.getQuantidade() + diff);
+                            new DAOLivro().update(livro);
+                        } else if (itemAntigo.getQuantidade() < item.getQuantidade()) {
+                            int diff = item.getQuantidade() - itemAntigo.getQuantidade();
+                            if (livro.getQuantidade() >= diff) {
+                                livro.setQuantidade(livro.getQuantidade() - diff);
+                                new DAOLivro().update(livro);
+                            } else {
+                                throw new IllegalStateException("Quantidade insuficiente para o livro: " + livro.getTitulo());
+                            }
+                        }
+
+                        // atializa o item no bd
+                        daoItemEmprestimo.updateItens(item);
+                    } else {
+                        throw new IllegalStateException("Item ou livro associado não encontrado!");
+                    }
+                }
+            } else {
+                System.out.println("Nenhum item associado ao empréstimo para atualizar.");
+            }
+
         } catch (ClassNotFoundException | SQLException e) {
             System.err.println("Erro ao atualizar empréstimo ou itens: " + e.getMessage());
             throw e;
@@ -215,30 +241,36 @@ public class DAOEmprestimo {
     }
 
 
-    public ItemEmprestimo getItensEmprestimo(int id, int emprestimoId) throws SQLException, ClassNotFoundException {
-        String sql = "SELECT * FROM itememprestimo WHERE id = ? AND emprestimoid = ?";
+    public List<ItemEmprestimo> getItensEmprestimoByEmprestimoId(int emprestimoId) throws SQLException, ClassNotFoundException {
+        String sql = "SELECT * FROM ItemEmprestimo WHERE emprestimoId = ?";
+        List<ItemEmprestimo> itensEmprestimo = new ArrayList<>();
 
         try (Conexao conn = new Conexao();
              PreparedStatement ps = conn.getConexao().prepareStatement(sql)) {
 
-            ps.setInt(1, id);
-            ps.setInt(2, emprestimoId);
-            ResultSet rs = ps.executeQuery();
-            if(rs.next()) {
-                ItemEmprestimo item = new ItemEmprestimo();
-                item.setId(rs.getInt("id"));
-                item.setEmprestimoId(rs.getInt("emprestimoId"));
-                item.setLivroId(rs.getInt("livroId"));
-                item.setQuantidade(rs.getInt("quantidade"));
-                return item;
+            ps.setInt(1, emprestimoId);
+
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    ItemEmprestimo item = new ItemEmprestimo();
+                    item.setId(rs.getInt("id"));
+                    item.setEmprestimoId(rs.getInt("emprestimoId"));
+                    item.setLivroId(rs.getInt("livroId"));
+                    item.setQuantidade(rs.getInt("quantidade"));
+
+                    // Adiciona o item à lista
+                    itensEmprestimo.add(item);
+                }
             }
-            return null;
-        }catch (ClassNotFoundException | SQLException e) {
-                System.err.println("Erro ao atualizar item emprestimo: " + e.getMessage());
-                throw e;
-            }
+
+        } catch (SQLException | ClassNotFoundException e) {
+            System.err.println("Erro ao buscar itens do empréstimo: " + e.getMessage());
+            throw e;
+        }
+
+        return itensEmprestimo;
+    }
 
 
     }
 
-}

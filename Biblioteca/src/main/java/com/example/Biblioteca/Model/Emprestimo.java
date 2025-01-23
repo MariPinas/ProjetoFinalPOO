@@ -10,6 +10,7 @@ public class Emprestimo {
     private List<ItemEmprestimo> itens;
 
     public Emprestimo() {
+        this.itens = new ArrayList<>();
     }
 
 
