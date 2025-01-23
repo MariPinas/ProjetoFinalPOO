@@ -240,37 +240,5 @@ public class DAOEmprestimo {
         }
     }
 
-
-    public List<ItemEmprestimo> getItensEmprestimoByEmprestimoId(int emprestimoId) throws SQLException, ClassNotFoundException {
-        String sql = "SELECT * FROM ItemEmprestimo WHERE emprestimoId = ?";
-        List<ItemEmprestimo> itensEmprestimo = new ArrayList<>();
-
-        try (Conexao conn = new Conexao();
-             PreparedStatement ps = conn.getConexao().prepareStatement(sql)) {
-
-            ps.setInt(1, emprestimoId);
-
-            try (ResultSet rs = ps.executeQuery()) {
-                while (rs.next()) {
-                    ItemEmprestimo item = new ItemEmprestimo();
-                    item.setId(rs.getInt("id"));
-                    item.setEmprestimoId(rs.getInt("emprestimoId"));
-                    item.setLivroId(rs.getInt("livroId"));
-                    item.setQuantidade(rs.getInt("quantidade"));
-
-                    // Adiciona o item à lista
-                    itensEmprestimo.add(item);
-                }
-            }
-
-        } catch (SQLException | ClassNotFoundException e) {
-            System.err.println("Erro ao buscar itens do empréstimo: " + e.getMessage());
-            throw e;
-        }
-
-        return itensEmprestimo;
-    }
-
-
     }
 
