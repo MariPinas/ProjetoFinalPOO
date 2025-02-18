@@ -42,7 +42,7 @@ Altere pelo nome de seu schema no banco, em "root" e "1234", altere para o seu u
 - Se você quer usar as propriedades do application.properties para gerenciar a conexão, então comente ou exclua a classe Conexao.java que faz a conexão manual com o banco.
 - O Spring Boot vai gerenciar a conexão para você automaticamente com base nas configurações no application.properties.
   
-Obs.:(Não esqueça de criar o schema com o mesmo nome que colocou acima)
+Obs.:(Não esqueça de criar o schema com o mesmo nome que configurou)
 
 #### 3. Compilar e rodar o projeto
 
