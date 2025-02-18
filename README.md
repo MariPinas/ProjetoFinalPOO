@@ -19,14 +19,14 @@ Este projeto é uma API RESTful de uma biblioteca desenvolvida com **Spring Boot
   
 ## Instalação
 
-1. Clone o repositório:
+#### 1. Clone o repositório:
    ```bash
    git clone https://github.com/MariPinas/ProjetoFinalPOO.git
    ```
 
-2. Configure o banco de dados:
+#### 2. Configure o banco de dados:
  Na linha 19 do arquivo `src/main/java/com/example/Biblioteca/Banco/Conexao.java`:
-```code
+```java
 this.conn = DriverManager.getConnection("jdbc:mysql://localhost:3306/biblioteca", "root", "1234");
 ```
 Altere pelo nome de seu schema no banco, em "root" e "1234", altere para o seu usuário e senha.
@@ -44,13 +44,13 @@ Altere pelo nome de seu schema no banco, em "root" e "1234", altere para o seu u
   
 Obs.:(Não esqueça de criar o schema com o mesmo nome que colocou acima)
 
-3. Compilar e rodar o projeto
+#### 3. Compilar e rodar o projeto
 
 #### Usando IntelliJ IDEA:
-Se estiver usando o IntelliJ, basta clicar no botão **Run** para compilar e executar o projeto diretamente pela interface da IDE.
+- Se estiver usando o IntelliJ, basta clicar no botão **Run** para compilar e executar o projeto diretamente pela interface da IDE.
 
 #### Usando o terminal:
-Se preferir rodar via terminal, utilize o Maven:
+- Se preferir rodar via terminal, utilize o Maven:
 ```bash
 mvn clean install
 mvn spring-boot:run
