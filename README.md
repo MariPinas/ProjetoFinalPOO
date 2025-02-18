@@ -1,7 +1,7 @@
 # Sistema de biblioteca com Springboot e MySQL
 
 Este projeto é uma API RESTful de uma biblioteca desenvolvida com **Spring Boot 3.4.1**, **Java 17**, **MySQL** e **Maven** na disciplina de Programação Orientada a Objetos, para gerenciar livros e empréstimos.
--Integrantes do projeto: **Mariana Santos** e **Flavia Goes**
+- Integrantes do projeto: **Mariana Santos** e **Flavia Goes**
 
 ## Tecnologias Utilizadas
 - **Java 17**
